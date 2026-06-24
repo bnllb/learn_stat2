@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -35,8 +35,11 @@ const edgeStyleByType = {
   used_by: { stroke: "rgba(45, 212, 191, 0.50)", strokeWidth: 1.8 },
 };
 
-type KnowledgeNodeData = StatNode & {
-  selected?: boolean;
+type KnowledgeNodeData = StatNode & { selected?: boolean };
+
+type NodeCssVars = CSSProperties & {
+  "--node-color": string;
+  "--node-accent": string;
 };
 
 function cx(...classes: Array<string | false | undefined>) {
@@ -50,10 +53,7 @@ function KnowledgeNode({ data }: NodeProps<Node<KnowledgeNodeData>>) {
   return (
     <div
       className={cx("k-node", data.selected && "k-node-selected")}
-      style={{
-        "--node-color": meta.color,
-        "--node-accent": meta.accent,
-      } as React.CSSProperties}
+      style={{ "--node-color": meta.color, "--node-accent": meta.accent } as NodeCssVars}
     >
       <Handle type="target" position={Position.Top} className="node-handle" />
       <div className="k-node-topline">
@@ -91,10 +91,7 @@ function layoutNodes(selectedId?: string): Node<KnowledgeNodeData>[] {
         x: xOffset + col * columnWidth,
         y: yOffset + row * rowHeight + (col % 2) * 56,
       },
-      data: {
-        ...node,
-        selected: node.id === selectedId,
-      },
+      data: { ...node, selected: node.id === selectedId },
     })),
   );
 }
@@ -109,20 +106,10 @@ function buildEdges(filteredNodeIds: Set<string>): Edge[] {
       label: edge.type === "prerequisite" ? "pre" : edge.type.replace("_", " "),
       type: "smoothstep",
       animated: edge.type === "used_by" || edge.type === "extends",
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: edgeStyleByType[edge.type].stroke,
-      },
+      markerEnd: { type: MarkerType.ArrowClosed, color: edgeStyleByType[edge.type].stroke },
       style: edgeStyleByType[edge.type],
-      labelStyle: {
-        fill: "rgba(226, 232, 240, 0.72)",
-        fontSize: 10,
-        fontWeight: 700,
-      },
-      labelBgStyle: {
-        fill: "rgba(15, 23, 42, 0.72)",
-        fillOpacity: 0.85,
-      },
+      labelStyle: { fill: "rgba(226, 232, 240, 0.72)", fontSize: 10, fontWeight: 700 },
+      labelBgStyle: { fill: "rgba(15, 23, 42, 0.72)", fillOpacity: 0.85 },
     }));
 }
 
@@ -164,11 +151,10 @@ export function App() {
   }, [query, moduleFilter, onlyEvalCore]);
 
   const filteredNodeIds = useMemo(() => new Set(filteredNodes.map((node) => node.id)), [filteredNodes]);
-
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState(layoutNodes(selectedId));
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState(buildEdges(filteredNodeIds));
 
-  useMemo(() => {
+  useEffect(() => {
     setFlowNodes(layoutNodes(selectedId).filter((node) => filteredNodeIds.has(node.id)));
     setFlowEdges(buildEdges(filteredNodeIds));
   }, [filteredNodeIds, selectedId, setFlowEdges, setFlowNodes]);
@@ -191,9 +177,7 @@ export function App() {
         <div>
           <div className="eyebrow">learn_stat2 · Statistics Knowledge OS</div>
           <h1>LLM / Agent Eval 统计学习图谱</h1>
-          <p>
-            用结构化节点、依赖关系和学习进度，把统计学从零散笔记变成可持续演化的工作知识系统。
-          </p>
+          <p>用结构化节点、依赖关系和学习进度，把统计学从零散笔记变成可持续演化的工作知识系统。</p>
         </div>
         <div className="stat-grid">
           <div className="stat-card"><span>{stats.total}</span><label>Nodes</label></div>
@@ -206,38 +190,18 @@ export function App() {
       <section className="workspace">
         <aside className="control-panel glass-card">
           <div className="panel-title">Filters</div>
-          <input
-            className="search-input"
-            placeholder="Search node / tag / summary..."
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <select
-            className="select-input"
-            value={moduleFilter}
-            onChange={(event) => setModuleFilter(event.target.value as StatModule | "all")}
-          >
+          <input className="search-input" placeholder="Search node / tag / summary..." value={query} onChange={(event) => setQuery(event.target.value)} />
+          <select className="select-input" value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value as StatModule | "all")}>
             <option value="all">All modules</option>
-            {moduleOrder.map((module) => (
-              <option key={module} value={module}>{moduleMeta[module].label}</option>
-            ))}
+            {moduleOrder.map((module) => <option key={module} value={module}>{moduleMeta[module].label}</option>)}
           </select>
           <label className="toggle-row">
-            <input
-              type="checkbox"
-              checked={onlyEvalCore}
-              onChange={(event) => setOnlyEvalCore(event.target.checked)}
-            />
+            <input type="checkbox" checked={onlyEvalCore} onChange={(event) => setOnlyEvalCore(event.target.checked)} />
             <span>Only Eval-core nodes</span>
           </label>
-
           <div className="legend-list">
             {moduleOrder.map((module) => (
-              <button
-                key={module}
-                className={cx("legend-item", moduleFilter === module && "legend-active")}
-                onClick={() => setModuleFilter(moduleFilter === module ? "all" : module)}
-              >
+              <button key={module} className={cx("legend-item", moduleFilter === module && "legend-active")} onClick={() => setModuleFilter(moduleFilter === module ? "all" : module)}>
                 <span style={{ background: moduleMeta[module].color }} />
                 {moduleMeta[module].shortLabel}
               </button>
@@ -260,53 +224,34 @@ export function App() {
             proOptions={{ hideAttribution: true }}
           >
             <Background color="rgba(148,163,184,0.12)" gap={22} />
-            <MiniMap
-              pannable
-              zoomable
-              nodeColor={(node) => moduleMeta[(node.data as KnowledgeNodeData).module].color}
-              maskColor="rgba(2, 6, 23, 0.66)"
-            />
+            <MiniMap pannable zoomable nodeColor={(node) => moduleMeta[(node.data as KnowledgeNodeData).module].color} maskColor="rgba(2, 6, 23, 0.66)" />
             <Controls />
           </ReactFlow>
         </section>
 
         <aside className="detail-panel glass-card">
-          <div className="node-kicker" style={{ color: moduleMeta[selectedNode.module].color }}>
-            {moduleMeta[selectedNode.module].label}
-          </div>
+          <div className="node-kicker" style={{ color: moduleMeta[selectedNode.module].color }}>{moduleMeta[selectedNode.module].label}</div>
           <h2>{selectedNode.title}</h2>
           <p className="detail-summary">{selectedNode.summary}</p>
-
           <div className="detail-metrics">
             <div><span>{selectedNode.importance}/5</span><label>Importance</label></div>
             <div><span>{selectedNode.mastery}/4</span><label>Mastery</label></div>
             <div><span>{selectedNode.evalRelevance}/5</span><label>Eval Relation</label></div>
           </div>
-
           <div className="progress-block">
-            <div className="progress-label">
-              <span>{statusLabel[selectedNode.status]}</span>
-              <span>{masteryLabel[selectedNode.mastery]}</span>
-            </div>
+            <div className="progress-label"><span>{statusLabel[selectedNode.status]}</span><span>{masteryLabel[selectedNode.mastery]}</span></div>
             <div className="detail-progress"><i style={{ width: `${(selectedNode.mastery / 4) * 100}%` }} /></div>
           </div>
-
-          <div className="tag-cloud">
-            {selectedNode.tags.map((tag) => <span key={tag}>#{tag}</span>)}
-          </div>
+          <div className="tag-cloud">{selectedNode.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
 
           <div className="relation-block">
             <h3>Prerequisites</h3>
-            {connected.upstream.length ? connected.upstream.map((id) => (
-              <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>
-            )) : <p>No upstream nodes yet.</p>}
+            {connected.upstream.length ? connected.upstream.map((id) => <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>) : <p>No upstream nodes yet.</p>}
           </div>
 
           <div className="relation-block">
             <h3>Downstream / Used by</h3>
-            {connected.downstream.length ? connected.downstream.map((id) => (
-              <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>
-            )) : <p>No downstream nodes yet.</p>}
+            {connected.downstream.length ? connected.downstream.map((id) => <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>) : <p>No downstream nodes yet.</p>}
           </div>
 
           <div className="relation-block">
@@ -319,11 +264,7 @@ export function App() {
             )) : <p>Not pinned to plan yet.</p>}
           </div>
 
-          {selectedNode.notePath && (
-            <a className="note-link" href={`../${selectedNode.notePath}`} target="_blank" rel="noreferrer">
-              Open note path →
-            </a>
-          )}
+          {selectedNode.notePath && <a className="note-link" href={`../${selectedNode.notePath}`} target="_blank" rel="noreferrer">Open note path →</a>}
         </aside>
       </section>
     </main>
