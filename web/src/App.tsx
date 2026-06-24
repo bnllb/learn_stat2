@@ -13,6 +13,8 @@ import ReactFlow, {
   useNodesState,
 } from "@xyflow/react";
 import { edges as graphEdges, masteryLabel, moduleMeta, nodes as graphNodes, plans, statusLabel } from "./data";
+import { PaperMapView } from "./PaperMapView";
+import { StudyLogView } from "./StudyLogView";
 import type { StatModule, StatNode } from "./types";
 
 const moduleOrder: StatModule[] = [
@@ -36,6 +38,7 @@ const edgeStyleByType = {
 };
 
 type KnowledgeNodeData = StatNode & { selected?: boolean };
+type AppTab = "graph" | "study" | "papers";
 
 type NodeCssVars = CSSProperties & {
   "--node-color": string;
@@ -51,10 +54,7 @@ function KnowledgeNode({ data }: NodeProps<Node<KnowledgeNodeData>>) {
   const masteryPct = (data.mastery / 4) * 100;
 
   return (
-    <div
-      className={cx("k-node", data.selected && "k-node-selected")}
-      style={{ "--node-color": meta.color, "--node-accent": meta.accent } as NodeCssVars}
-    >
+    <div className={cx("k-node", data.selected && "k-node-selected")} style={{ "--node-color": meta.color, "--node-accent": meta.accent } as NodeCssVars}>
       <Handle type="target" position={Position.Top} className="node-handle" />
       <div className="k-node-topline">
         <span className="module-pill">{meta.shortLabel}</span>
@@ -125,16 +125,13 @@ function getConnected(selectedId: string | undefined) {
   );
 }
 
-export function App() {
+function GraphView() {
   const [selectedId, setSelectedId] = useState<string>("confidence_interval");
   const [query, setQuery] = useState("");
   const [moduleFilter, setModuleFilter] = useState<StatModule | "all">("all");
   const [onlyEvalCore, setOnlyEvalCore] = useState(true);
 
-  const selectedNode = useMemo(
-    () => graphNodes.find((node) => node.id === selectedId) ?? graphNodes[0],
-    [selectedId],
-  );
+  const selectedNode = useMemo(() => graphNodes.find((node) => node.id === selectedId) ?? graphNodes[0], [selectedId]);
 
   const filteredNodes = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -159,6 +156,96 @@ export function App() {
     setFlowEdges(buildEdges(filteredNodeIds));
   }, [filteredNodeIds, selectedId, setFlowEdges, setFlowNodes]);
 
+  const connected = useMemo(() => getConnected(selectedNode?.id), [selectedNode?.id]);
+  const byId = useMemo(() => new Map(graphNodes.map((node) => [node.id, node])), []);
+  const relatedPlans = plans.filter((plan) => plan.nodeIds.includes(selectedNode.id));
+
+  return (
+    <section className="workspace">
+      <aside className="control-panel glass-card">
+        <div className="panel-title">Filters</div>
+        <input className="search-input" placeholder="Search node / tag / summary..." value={query} onChange={(event) => setQuery(event.target.value)} />
+        <select className="select-input" value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value as StatModule | "all")}>
+          <option value="all">All modules</option>
+          {moduleOrder.map((module) => <option key={module} value={module}>{moduleMeta[module].label}</option>)}
+        </select>
+        <label className="toggle-row">
+          <input type="checkbox" checked={onlyEvalCore} onChange={(event) => setOnlyEvalCore(event.target.checked)} />
+          <span>Only Eval-core nodes</span>
+        </label>
+        <div className="legend-list">
+          {moduleOrder.map((module) => (
+            <button key={module} className={cx("legend-item", moduleFilter === module && "legend-active")} onClick={() => setModuleFilter(moduleFilter === module ? "all" : module)}>
+              <span style={{ background: moduleMeta[module].color }} />
+              {moduleMeta[module].shortLabel}
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <section className="graph-panel glass-card">
+        <ReactFlow
+          nodes={flowNodes}
+          edges={flowEdges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={(_, node) => setSelectedId(node.id)}
+          minZoom={0.25}
+          maxZoom={1.4}
+          fitView
+          fitViewOptions={{ padding: 0.18 }}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background color="rgba(148,163,184,0.12)" gap={22} />
+          <MiniMap pannable zoomable nodeColor={(node) => moduleMeta[(node.data as KnowledgeNodeData).module].color} maskColor="rgba(2, 6, 23, 0.66)" />
+          <Controls />
+        </ReactFlow>
+      </section>
+
+      <aside className="detail-panel glass-card">
+        <div className="node-kicker" style={{ color: moduleMeta[selectedNode.module].color }}>{moduleMeta[selectedNode.module].label}</div>
+        <h2>{selectedNode.title}</h2>
+        <p className="detail-summary">{selectedNode.summary}</p>
+        <div className="detail-metrics">
+          <div><span>{selectedNode.importance}/5</span><label>Importance</label></div>
+          <div><span>{selectedNode.mastery}/4</span><label>Mastery</label></div>
+          <div><span>{selectedNode.evalRelevance}/5</span><label>Eval Relation</label></div>
+        </div>
+        <div className="progress-block">
+          <div className="progress-label"><span>{statusLabel[selectedNode.status]}</span><span>{masteryLabel[selectedNode.mastery]}</span></div>
+          <div className="detail-progress"><i style={{ width: `${(selectedNode.mastery / 4) * 100}%` }} /></div>
+        </div>
+        <div className="tag-cloud">{selectedNode.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
+
+        <div className="relation-block">
+          <h3>Prerequisites</h3>
+          {connected.upstream.length ? connected.upstream.map((id) => <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>) : <p>No upstream nodes yet.</p>}
+        </div>
+
+        <div className="relation-block">
+          <h3>Downstream / Used by</h3>
+          {connected.downstream.length ? connected.downstream.map((id) => <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>) : <p>No downstream nodes yet.</p>}
+        </div>
+
+        <div className="relation-block">
+          <h3>Learning Plan</h3>
+          {relatedPlans.length ? relatedPlans.map((plan) => (
+            <div className="plan-chip" key={plan.id}>
+              <strong>W{plan.week} · D{plan.day}</strong>
+              <span>{plan.title}</span>
+            </div>
+          )) : <p>Not pinned to plan yet.</p>}
+        </div>
+
+        {selectedNode.notePath && <a className="note-link" href={`../${selectedNode.notePath}`} target="_blank" rel="noreferrer">Open note path →</a>}
+      </aside>
+    </section>
+  );
+}
+
+export function App() {
+  const [activeTab, setActiveTab] = useState<AppTab>("graph");
   const stats = useMemo(() => {
     const total = graphNodes.length;
     const applied = graphNodes.filter((node) => node.mastery === 4).length;
@@ -167,10 +254,6 @@ export function App() {
     return { total, applied, highPriority, avgMastery };
   }, []);
 
-  const connected = useMemo(() => getConnected(selectedNode?.id), [selectedNode?.id]);
-  const byId = useMemo(() => new Map(graphNodes.map((node) => [node.id, node])), []);
-  const relatedPlans = plans.filter((plan) => plan.nodeIds.includes(selectedNode.id));
-
   return (
     <main className="app-shell">
       <section className="hero-panel">
@@ -178,6 +261,11 @@ export function App() {
           <div className="eyebrow">learn_stat2 · Statistics Knowledge OS</div>
           <h1>LLM / Agent Eval 统计学习图谱</h1>
           <p>用结构化节点、依赖关系和学习进度，把统计学从零散笔记变成可持续演化的工作知识系统。</p>
+          <div className="top-tabs">
+            <button className={cx(activeTab === "graph" && "tab-active")} onClick={() => setActiveTab("graph")}>Knowledge Graph</button>
+            <button className={cx(activeTab === "study" && "tab-active")} onClick={() => setActiveTab("study")}>Study Log</button>
+            <button className={cx(activeTab === "papers" && "tab-active")} onClick={() => setActiveTab("papers")}>Paper Map</button>
+          </div>
         </div>
         <div className="stat-grid">
           <div className="stat-card"><span>{stats.total}</span><label>Nodes</label></div>
@@ -187,86 +275,9 @@ export function App() {
         </div>
       </section>
 
-      <section className="workspace">
-        <aside className="control-panel glass-card">
-          <div className="panel-title">Filters</div>
-          <input className="search-input" placeholder="Search node / tag / summary..." value={query} onChange={(event) => setQuery(event.target.value)} />
-          <select className="select-input" value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value as StatModule | "all")}>
-            <option value="all">All modules</option>
-            {moduleOrder.map((module) => <option key={module} value={module}>{moduleMeta[module].label}</option>)}
-          </select>
-          <label className="toggle-row">
-            <input type="checkbox" checked={onlyEvalCore} onChange={(event) => setOnlyEvalCore(event.target.checked)} />
-            <span>Only Eval-core nodes</span>
-          </label>
-          <div className="legend-list">
-            {moduleOrder.map((module) => (
-              <button key={module} className={cx("legend-item", moduleFilter === module && "legend-active")} onClick={() => setModuleFilter(moduleFilter === module ? "all" : module)}>
-                <span style={{ background: moduleMeta[module].color }} />
-                {moduleMeta[module].shortLabel}
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        <section className="graph-panel glass-card">
-          <ReactFlow
-            nodes={flowNodes}
-            edges={flowEdges}
-            nodeTypes={nodeTypes}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onNodeClick={(_, node) => setSelectedId(node.id)}
-            minZoom={0.25}
-            maxZoom={1.4}
-            fitView
-            fitViewOptions={{ padding: 0.18 }}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Background color="rgba(148,163,184,0.12)" gap={22} />
-            <MiniMap pannable zoomable nodeColor={(node) => moduleMeta[(node.data as KnowledgeNodeData).module].color} maskColor="rgba(2, 6, 23, 0.66)" />
-            <Controls />
-          </ReactFlow>
-        </section>
-
-        <aside className="detail-panel glass-card">
-          <div className="node-kicker" style={{ color: moduleMeta[selectedNode.module].color }}>{moduleMeta[selectedNode.module].label}</div>
-          <h2>{selectedNode.title}</h2>
-          <p className="detail-summary">{selectedNode.summary}</p>
-          <div className="detail-metrics">
-            <div><span>{selectedNode.importance}/5</span><label>Importance</label></div>
-            <div><span>{selectedNode.mastery}/4</span><label>Mastery</label></div>
-            <div><span>{selectedNode.evalRelevance}/5</span><label>Eval Relation</label></div>
-          </div>
-          <div className="progress-block">
-            <div className="progress-label"><span>{statusLabel[selectedNode.status]}</span><span>{masteryLabel[selectedNode.mastery]}</span></div>
-            <div className="detail-progress"><i style={{ width: `${(selectedNode.mastery / 4) * 100}%` }} /></div>
-          </div>
-          <div className="tag-cloud">{selectedNode.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
-
-          <div className="relation-block">
-            <h3>Prerequisites</h3>
-            {connected.upstream.length ? connected.upstream.map((id) => <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>) : <p>No upstream nodes yet.</p>}
-          </div>
-
-          <div className="relation-block">
-            <h3>Downstream / Used by</h3>
-            {connected.downstream.length ? connected.downstream.map((id) => <button key={id} onClick={() => setSelectedId(id)}>{byId.get(id)?.title ?? id}</button>) : <p>No downstream nodes yet.</p>}
-          </div>
-
-          <div className="relation-block">
-            <h3>Learning Plan</h3>
-            {relatedPlans.length ? relatedPlans.map((plan) => (
-              <div className="plan-chip" key={plan.id}>
-                <strong>W{plan.week} · D{plan.day}</strong>
-                <span>{plan.title}</span>
-              </div>
-            )) : <p>Not pinned to plan yet.</p>}
-          </div>
-
-          {selectedNode.notePath && <a className="note-link" href={`../${selectedNode.notePath}`} target="_blank" rel="noreferrer">Open note path →</a>}
-        </aside>
-      </section>
+      {activeTab === "graph" && <GraphView />}
+      {activeTab === "study" && <StudyLogView />}
+      {activeTab === "papers" && <PaperMapView />}
     </main>
   );
 }
