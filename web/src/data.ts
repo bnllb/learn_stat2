@@ -1,11 +1,15 @@
 import rawNodes from "../../data/nodes.json";
 import rawEdges from "../../data/edges.json";
 import rawPlans from "../../data/plans.json";
-import type { LearningPlanItem, StatEdge, StatModule, StatNode } from "./types";
+import rawStudyLogs from "../../data/study_logs.json";
+import rawPaperMappings from "../../data/paper_mappings.json";
+import type { LearningPlanItem, PaperMapping, StatEdge, StatModule, StatNode, StudyLog } from "./types";
 
 export const nodes = rawNodes as StatNode[];
 export const edges = rawEdges as StatEdge[];
 export const plans = rawPlans as LearningPlanItem[];
+export const studyLogs = rawStudyLogs as StudyLog[];
+export const paperMappings = rawPaperMappings as PaperMapping[];
 
 export const moduleMeta: Record<StatModule, { label: string; shortLabel: string; color: string; accent: string }> = {
   probability: { label: "Probability", shortLabel: "Prob", color: "#38bdf8", accent: "rgba(56, 189, 248, 0.18)" },
