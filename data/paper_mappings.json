@@ -1,0 +1,53 @@
+[
+  {
+    "id": "2601.20251",
+    "title": "Efficient Evaluation of LLM Performance with Statistical Guarantees",
+    "url": "https://arxiv.org/abs/2601.20251",
+    "date": "2026-01-29",
+    "relevance": 5,
+    "mainEvalProblem": "在有限 query budget 下高效评估 LLM 在固定 benchmark bank 上的 performance，并给出 statistical guarantees。",
+    "metrics": ["accuracy", "confidence interval", "coverage", "effective sample size"],
+    "statisticalMethods": [
+      "finite population inference",
+      "adaptive sampling",
+      "inverse probability weighting",
+      "AIPW-style bias correction",
+      "confidence interval",
+      "martingale CLT"
+    ],
+    "mappedNodeIds": [
+      "finite_population_inference",
+      "adaptive_sampling",
+      "importance_sampling",
+      "ipw_aipw",
+      "confidence_interval",
+      "benchmark_ci",
+      "martingale_clt"
+    ],
+    "missingNodeSuggestions": [
+      "survey_sampling",
+      "effective_sample_size",
+      "filtration",
+      "triangular_array",
+      "lindeberg_condition"
+    ],
+    "priorityImpact": "high",
+    "shouldUpdatePlan": true,
+    "suggestedAction": "把 finite population inference、IPW/AIPW、adaptive sampling、martingale CLT 加入 1-12 个月长期路线。"
+  },
+  {
+    "id": "paper-scan-placeholder",
+    "title": "Monthly Eval Paper Scan Placeholder",
+    "url": "",
+    "date": "2026-06-24",
+    "relevance": 4,
+    "mainEvalProblem": "占位记录：后续由 alphaXiv MCP 每月扫描最近 1 个月 Eval 论文并生成真实映射。",
+    "metrics": [],
+    "statisticalMethods": ["paper scan", "knowledge graph update"],
+    "mappedNodeIds": ["metric_design", "judge_reliability", "offline_online_correlation"],
+    "missingNodeSuggestions": [],
+    "priorityImpact": "medium",
+    "shouldUpdatePlan": false,
+    "suggestedAction": "配置 alphaXiv MCP 后替换为真实月度扫描报告。"
+  }
+]
