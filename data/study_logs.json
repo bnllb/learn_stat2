@@ -1,0 +1,26 @@
+[
+  {
+    "id": "log-2026-06-24-project-init",
+    "date": "2026-06-24",
+    "nodeIds": ["random_variable", "bernoulli_binomial", "expectation", "variance", "confidence_interval"],
+    "planRef": "week1-day1",
+    "durationMinutes": 60,
+    "summary": "初始化 learn_stat2 统计学习体系，建立知识图谱、学习计划、节点状态和 Eval 相关映射。",
+    "remainingQuestions": [
+      "如何把每次学习进度持续映射回节点 mastery？",
+      "哪些 Eval 论文会反向推动新增统计节点？"
+    ],
+    "artifacts": [
+      "docs/stat_knowledge_map_v0.1.md",
+      "docs/learning_plan_v0.1.md",
+      "data/nodes.json",
+      "data/edges.json"
+    ],
+    "masteryUpdates": [
+      { "nodeId": "random_variable", "before": 0, "after": 1 },
+      { "nodeId": "bernoulli_binomial", "before": 0, "after": 1 },
+      { "nodeId": "expectation", "before": 0, "after": 1 },
+      { "nodeId": "variance", "before": 0, "after": 1 }
+    ]
+  }
+]
