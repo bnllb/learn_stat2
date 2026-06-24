@@ -44,3 +44,37 @@ export type LearningPlanItem = {
   goal: string;
   status: "todo" | "doing" | "done";
 };
+
+export type MasteryUpdate = {
+  nodeId: string;
+  before: 0 | 1 | 2 | 3 | 4;
+  after: 0 | 1 | 2 | 3 | 4;
+};
+
+export type StudyLog = {
+  id: string;
+  date: string;
+  nodeIds: string[];
+  planRef?: string;
+  durationMinutes?: number;
+  summary: string;
+  remainingQuestions: string[];
+  artifacts: string[];
+  masteryUpdates: MasteryUpdate[];
+};
+
+export type PaperMapping = {
+  id: string;
+  title: string;
+  url: string;
+  date: string;
+  relevance: 1 | 2 | 3 | 4 | 5;
+  mainEvalProblem: string;
+  metrics: string[];
+  statisticalMethods: string[];
+  mappedNodeIds: string[];
+  missingNodeSuggestions: string[];
+  priorityImpact: "low" | "medium" | "high";
+  shouldUpdatePlan: boolean;
+  suggestedAction: string;
+};
