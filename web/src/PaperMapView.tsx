@@ -1,6 +1,9 @@
+import type { CSSProperties } from "react";
 import { moduleMeta, nodes, paperMappings } from "./data";
 
 const nodeById = new Map(nodes.map((node) => [node.id, node]));
+
+type MappedNodeStyle = CSSProperties & { "--node-color": string };
 
 function impactClass(impact: string) {
   if (impact === "high") return "impact-high";
@@ -53,7 +56,7 @@ export function PaperMapView() {
                 const node = nodeById.get(id);
                 if (!node) return <span className="missing-chip" key={id}>{id}</span>;
                 return (
-                  <div className="mapped-node" key={id} style={{ "--node-color": moduleMeta[node.module].color } as React.CSSProperties}>
+                  <div className="mapped-node" key={id} style={{ "--node-color": moduleMeta[node.module].color } as MappedNodeStyle}>
                     <strong>{node.title}</strong>
                     <span>{moduleMeta[node.module].shortLabel} · Eval {node.evalRelevance}/5</span>
                   </div>
