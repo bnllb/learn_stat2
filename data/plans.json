@@ -1,0 +1,65 @@
+[
+  {
+    "id": "week1-day1",
+    "week": 1,
+    "day": 1,
+    "title": "项目启动 + 知识图谱阅读",
+    "nodeIds": ["random_variable", "bernoulli_binomial", "expectation", "variance"],
+    "goal": "阅读知识图谱，标记核心节点，初始化掌握程度。",
+    "status": "todo"
+  },
+  {
+    "id": "week1-day2",
+    "week": 1,
+    "day": 2,
+    "title": "随机变量 / Bernoulli / Binomial",
+    "nodeIds": ["random_variable", "bernoulli_binomial"],
+    "goal": "把 pass/fail benchmark 映射成随机变量。",
+    "status": "todo"
+  },
+  {
+    "id": "week1-day3",
+    "week": 1,
+    "day": 3,
+    "title": "期望 / 方差",
+    "nodeIds": ["expectation", "variance"],
+    "goal": "理解 benchmark mean 和 reward variance。",
+    "status": "todo"
+  },
+  {
+    "id": "week1-day4",
+    "week": 1,
+    "day": 4,
+    "title": "LLN / CLT",
+    "nodeIds": ["lln", "clt"],
+    "goal": "理解 repeat sampling 和 CI 的概率基础。",
+    "status": "todo"
+  },
+  {
+    "id": "week2-day8",
+    "week": 2,
+    "day": 8,
+    "title": "Confidence Interval",
+    "nodeIds": ["confidence_interval", "benchmark_ci"],
+    "goal": "能解释 CI 的覆盖率含义，并用于 benchmark 分数。",
+    "status": "todo"
+  },
+  {
+    "id": "week3-day11",
+    "week": 3,
+    "day": 11,
+    "title": "Pass@k",
+    "nodeIds": ["pass_at_k", "bernoulli_binomial", "estimator"],
+    "goal": "从 Bernoulli/Binomial 和估计量角度理解 pass@k。",
+    "status": "todo"
+  },
+  {
+    "id": "week4-day18",
+    "week": 4,
+    "day": 18,
+    "title": "Correlation / Regression",
+    "nodeIds": ["covariance_correlation", "offline_online_correlation"],
+    "goal": "理解 offline-online correlation 的统计含义。",
+    "status": "todo"
+  }
+]
