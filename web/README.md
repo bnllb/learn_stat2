@@ -2,19 +2,19 @@
 
 A lightweight TypeScript / React visualization app for the `learn_stat2` statistics knowledge graph.
 
-## What it shows
+## Pages
+
+- **Knowledge Graph**: interactive graph of statistics nodes and dependency edges.
+- **Study Log**: timeline of learning logs, touched nodes, artifacts, questions, and mastery updates.
+- **Paper Map**: maps evaluation papers to statistics nodes and highlights missing knowledge.
+
+## What it reads
 
 - Knowledge nodes from `../data/nodes.json`
 - Upstream / downstream dependencies from `../data/edges.json`
 - Plan links from `../data/plans.json`
-- Node attributes:
-  - module
-  - importance
-  - mastery
-  - eval relevance
-  - status
-  - tags
-  - note path
+- Study logs from `../data/study_logs.json`
+- Paper mappings from `../data/paper_mappings.json`
 
 ## Run locally
 
@@ -34,6 +34,16 @@ npm run build
 npm run preview
 ```
 
+## Deploy
+
+GitHub Pages deployment is handled by:
+
+```text
+../.github/workflows/deploy-pages.yml
+```
+
+It builds `web/` and publishes `web/dist`.
+
 ## Design direction
 
 This MVP intentionally uses a polished dark UI:
@@ -45,6 +55,8 @@ This MVP intentionally uses a polished dark UI:
 - side detail panel
 - module filters
 - Eval-core toggle
+- timeline cards
+- paper-to-node mapping cards
 
 ## Data-first principle
 
@@ -56,6 +68,8 @@ The durable source of truth remains:
 ../data/nodes.json
 ../data/edges.json
 ../data/plans.json
+../data/study_logs.json
+../data/paper_mappings.json
 ../topic_notes/*.md
 ../paper_reading/*.md
 ```
@@ -64,8 +78,8 @@ This keeps the project Git-native and easy to extend later with CLI or GitHub-ba
 
 ## Next improvements
 
-- Add study log timeline.
-- Add paper-to-node mapping page.
-- Add node status update workflow.
-- Add GitHub Pages deployment.
-- Add command-line helpers for changing mastery/status.
+- Add GitHub-backed editing in the browser.
+- Add full paper scan report pages.
+- Add topic note markdown rendering.
+- Add graph layout presets.
+- Add search by work problem.
